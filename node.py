@@ -1,4 +1,4 @@
-import os , base64 , getpass
+import os , base64 , getpass , time , ntplib
 
 # Modules for handling asymmetric cryptography:
 from Crypto.PublicKey import RSA
@@ -29,6 +29,9 @@ class Node:
 
 		# Load the user's private and public keys:
 		self.publicKey , self.privateKey = self.keyHandling()
+
+		# Set the time difference:
+		self.timeDiff = self.timeSync()
 
 	def keyHandling(self):
 		'''
@@ -70,3 +73,17 @@ class Node:
 				file.write(fernet.encrypt(privKey))
 
 		return pubKey , privKey
+
+	def timeSync(self):
+		'''
+		Get an accurate time to allow synchronized updates with other nodes. This is critical, especially when communicating with nodes behind NAT.
+		'''
+		for i in range(0 , 5):
+			try:
+				ntpResponse = ntplib.NTPClient().request('time.nist.gov')
+				return ntpResponse.offset
+			except:
+				time.sleep(4)
+
+		print('Unable to contact time servers')
+		exit()
