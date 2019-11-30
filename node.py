@@ -24,25 +24,44 @@ class Node:
 	def __init__(self):
 		# Set backend folder location:
 		self.backend = './PodiumBackend/'
+		if (not (os.path.exists(self.backend))):
+			os.makedirs(self.backend)
+
 		# Load the user's private and public keys:
 		self.publicKey , self.privateKey = self.keyHandling()
 
-	def keyHandling():
-		if (os.file.exists((self.backend + 'pubKey.podium')) and os.file.exists((self.backend + 'privKey.podium'))):
+	def keyHandling(self):
+		'''
+		This fuction is designed to create or load the user's public and private RSA 8192-bit keys, and store them in local files encrypted with a password.
+		'''
+		if ((os.path.isfile((self.backend + 'pubKey.podium')) and os.path.isfile((self.backend + 'privKey.podium'))) and os.path.isfile((self.backend + 'salt.podium'))):
 			password = (getpass.getpass('Password:\t')).encode()
-			symKey = base64.urlsafe_b64encode((PBKDF2HMAC(algorithm = hashes.SHA512() , length = 32 , iterations = 100000 , backend = default_backend())).derive(password))
+
+			with open((self.backend + 'salt.podium') , 'rb') as file:
+				salt = file.read()
+
+			symKey = base64.urlsafe_b64encode((PBKDF2HMAC(algorithm = hashes.SHA512() , length = 32 , salt = salt , iterations = 100000 , backend = default_backend())).derive(password))
 			fernet = Fernet(symKey)
 
-			with open((self.backend + 'pubKey.podium') , 'rb') as file:
-				pubKey = fernet.decrypt(file.read())
-			with open((self.backend + 'privKey.podium') , 'rb') as file:
-				privKey = fernet.decrypt(file.read())
+			try:
+				with open((self.backend + 'pubKey.podium') , 'rb') as file:
+					pubKey = fernet.decrypt(file.read())
+				with open((self.backend + 'privKey.podium') , 'rb') as file:
+					privKey = fernet.decrypt(file.read())
+			except:
+				print('Unable to decrypt your public and private keys.\nThese keys are necessary for Podium to run.\nPlease make sure you entered the correct password.')
+				exit()
 				
 		else:
 			asymKeys = RSA.generate(8192 , Random.new().read)
 			pubKey , privKey = asymKeys.publickey().exportKey('PEM') , asymKeys.exportKey('PEM')
 			password = (getpass.getpass('Password:\t')).encode()
-			symKey = base64.urlsafe_b64encode((PBKDF2HMAC(algorithm = hashes.SHA512() , length = 32 , iterations = 100000 , backend = default_backend())).derive(password))
+
+			salt = os.urandom(16)
+			with open((self.backend + 'salt.podium') , 'wb') as file:
+				file.write(salt)
+
+			symKey = base64.urlsafe_b64encode((PBKDF2HMAC(algorithm = hashes.SHA512() , length = 32 , salt = salt , iterations = 100000 , backend = default_backend())).derive(password))
 			fernet = Fernet(symKey)
 
 			with open((self.backend + 'pubKey.podium') , 'wb') as file:
