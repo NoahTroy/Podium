@@ -1,5 +1,8 @@
 import os , base64 , getpass , time , ntplib
 
+# Load the plugin for the applicable cryptocurrency:
+from PodiumBackend.cryptoPlugin import MetaHash as coin
+
 # Modules for handling asymmetric cryptography:
 from Crypto.PublicKey import RSA
 from Crypto import Random
@@ -30,7 +33,10 @@ class Node:
 		# Load the user's private and public keys:
 		self.publicKey , self.privateKey = self.keyHandling()
 
-		# Set the time difference:
+		# Load the user's wallet object:
+		self.wallet = coin(self.backend)
+
+		# Set the time difference (may remove this later):
 		self.timeDiff = self.timeSync()
 
 	def keyHandling(self):
@@ -74,6 +80,7 @@ class Node:
 
 		return pubKey , privKey
 
+	# May remove this function later:
 	def timeSync(self):
 		'''
 		Get an accurate time to allow synchronized updates with other nodes. This is critical, especially when communicating with nodes behind NAT.
