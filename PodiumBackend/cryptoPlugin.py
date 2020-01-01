@@ -22,7 +22,7 @@ class MetaHash:
 		print(self.publicKey , self.privateKey , self.address)
 
 	def keyHandling(self):
-		if ((os.path.isfile((self.backend + 'metaHashPub.podium')) and os.path.isfile((self.backend + 'metaHashPriv.podium'))) and os.path.isfile((self.backend + 'metaHashSalt.podium'))):
+		if (((os.path.isfile((self.backend + 'metaHashPub.podium')) and os.path.isfile((self.backend + 'metaHashPriv.podium'))) and os.path.isfile((self.backend + 'metaHashSalt.podium'))) and os.path.isfile((self.backend + 'metaHashAddress.podium'))):
 			password = (getpass.getpass('Wallet Password:\t')).encode()
 
 			with open((self.backend + 'metaHashSalt.podium') , 'rb') as file:
@@ -36,8 +36,8 @@ class MetaHash:
 					pubKey = fernet.decrypt(file.read())
 				with open((self.backend + 'metaHashPriv.podium') , 'rb') as file:
 					privKey = fernet.decrypt(file.read())
-				with open((self.backend + 'metaHashAddress.txt') , 'r') as file:
-					address = file.read()
+				with open((self.backend + 'metaHashAddress.podium') , 'rb') as file:
+					address = fernet.decrypt(file.read())
 			except:
 				print('Unable to decrypt your wallet.\nThis is necessary for Podium to run.\nPlease make sure you entered the correct password.')
 				exit()
@@ -85,7 +85,7 @@ class MetaHash:
 				file.write(fernet.encrypt(pubKey))
 			with open((self.backend + 'metaHashPriv.podium') , 'wb') as file:
 				file.write(fernet.encrypt(privKey))
-			with open((self.backend + 'metaHashAddress.txt') , 'w') as file:
-				file.write(address)
+			with open((self.backend + 'metaHashAddress.podium') , 'wb') as file:
+				file.write(fernet.encrypt(address.encode('utf-8')))
 
 		return pubKey , privKey , address
