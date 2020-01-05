@@ -1,4 +1,4 @@
-import os
+import os , random
 
 # Modules for handling key generation and saving:
 import hashlib , binascii , getpass , base64
@@ -8,6 +8,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.fernet import Fernet
+
+# Modules for handling networking:
+import requests , dns.resolver
 
 class MetaHash:
 	'''This is the MetaHash plugin for Podium, designating MetaHash as the cryptocurrency used to negotiate among other nodes, and setting the standards.'''
@@ -19,7 +22,47 @@ class MetaHash:
 		# Load the private and public keys and address for the wallet:
 		self.publicKey , self.privateKey , self.address = self.keyHandling()
 
-		print(self.publicKey , self.privateKey , self.address)
+
+	# This module may be unecessary and get removed later:
+	def getPubIP(self):
+		try:
+			ip = requests.get('https://ip.42.pl/raw').text
+			return ip
+		except:
+			print('There was an error fetching your public IP Address.\nPlease check your internet connection and try again.')
+			exit(1)
+
+
+	def getTorrentIP(self):
+		for i in range(0 , 3):
+			try:
+				dnsQuery = dns.resolver.query('tor.net-main.metahashnetwork.com' , 'A')
+				IPs = []
+				for IP in dnsQuery:
+					IPs.append(IP.to_text())
+				numIPs = len(IPs)
+				return IPs[random.randint(0 , (numIPs - 1))]
+			except:
+				continue
+		print('There was an error fetching torrent node IP Addresses.\nPlease check your internet connection and try again.')
+		exit(1)
+
+	def sendReq(self , query , data):
+		ipAddr = self.getTorrentIP()
+		for i in range(0 , 3):
+			try:
+				return requests.post(('http://' + ipAddr + ':5795/' + query) , json = data)
+			except Exception as e:
+				print(e)
+				continue
+		print('There was an error sending the request.\nPlease check your internet connection and try again.')
+		exit(1)
+
+
+	def getBalance(self):
+		response = self.sendReq('fetch-balance' , {'id' : 1 , 'params' : {'address' : self.address}})
+		print(response.text)
+
 
 	def keyHandling(self):
 		if (((os.path.isfile((self.backend + 'metaHashPub.podium')) and os.path.isfile((self.backend + 'metaHashPriv.podium'))) and os.path.isfile((self.backend + 'metaHashSalt.podium'))) and os.path.isfile((self.backend + 'metaHashAddress.podium'))):

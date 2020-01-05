@@ -37,7 +37,7 @@ class Node:
 		self.wallet = coin(self.backend)
 
 		# Set the time difference (may remove this later):
-		self.timeDiff = self.timeSync()
+		#self.timeDiff = self.timeSync()
 
 	def keyHandling(self):
 		'''
