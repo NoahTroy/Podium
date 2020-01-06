@@ -59,8 +59,8 @@ class MetaHash:
 		exit(1)
 
 
-	def getBalance(self):
-		response = self.sendReq('fetch-balance' , {'id' : 1 , 'params' : {'address' : self.address}})
+	def getBalance(self , address = self.address):
+		response = self.sendReq('fetch-balance' , {'id' : 1 , 'params' : {'address' : address}})
 		print(response.text)
 
 
